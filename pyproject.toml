@@ -1,17 +1,21 @@
 [project]
 name = "argus"
 version = "0.1.0"
-description = "Add your description here"
+description = "The hundred-eyed agent runtime — a multi-agent system with memory, skills, MCP federation, scheduled autonomy and human-in-the-loop guardrails."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "asyncio>=4.0.0",
     "deepagents>=0.6.12",
     "elevenlabs>=2.59.0",
+    "fastmcp>=3.4.5",
     "langchain>=1.3.14",
+    "langchain-mcp-adapters>=0.3.1",
     "langchain-openai>=1.4.1",
     "langchain-quickjs>=0.3.4",
     "langchain-text-splitters>=1.1.2",
     "langgraph>=1.2.10",
+    "mcp<2",
     "pytelegrambotapi>=4.36.0",
     "python-dotenv>=1.2.2",
 ]

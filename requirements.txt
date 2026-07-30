@@ -1,4 +1,7 @@
 langchain
+langchain-mcp-adapters
+mcp<2
+fastmcp
 langgraph
 deepagents
 langchain-openai
@@ -7,3 +10,4 @@ python-dotenv
 elevenlabs
 pyTelegramBotAPI
 langchain-quickjs
+asyncio
