@@ -57,70 +57,7 @@ it did, constrain what it may do, and interrupt it before it does something expe
 
 ## Architecture
 
-```mermaid
-flowchart TB
-    U["<b>USER</b><br/>Telegram · Voice · CLI · API"]
-    IDN["<b>IDENTITY GATE</b><br/>allowlist · per-user memory namespace"]
-    SUP["<b>SUPERVISOR AGENT</b><br/>plan · route · verify"]
-
-    RES["Research<br/><i>sub-agent</i>"]
-    FSA["Files<br/><i>sub-agent</i>"]
-    SCA["Scheduling<br/><i>sub-agent</i>"]
-    ANA["Analysis<br/><i>sub-agent</i>"]
-
-    PERM{{"<b>POLICY GATE</b><br/>allow · ask · deny<br/>guardrails · budgets · audit"}}
-    HITL["<b>HUMAN IN THE LOOP</b><br/>approve · edit args · reject"]
-    DENY["refused<br/>+ logged"]
-    OBS["<b>LangSmith</b><br/>tracing · evals"]
-
-    MEM["<b>Memory</b><br/>short · long · RAG"]
-    SK["<b>Skills</b><br/>on-demand bundles"]
-    MCP["<b>MCP Federation</b><br/>firecrawl · math · yours"]
-    CRON["<b>Scheduler</b><br/>cron · deferred · reminders"]
-    VFS["<b>Virtual FS</b><br/>artifacts · handoffs"]
-
-    STORE[("<b>Postgres + pgvector</b><br/>checkpoints · memory · vectors · audit")]
-
-    U --> IDN --> SUP
-    SUP --> RES & FSA & SCA & ANA
-    RES & FSA & SCA & ANA -- "tool call" --> PERM
-
-    PERM -- "allow" --> MEM & SK & MCP & CRON & VFS
-    PERM -- "ask" --> HITL
-    PERM -- "deny" --> DENY
-    PERM -. "every decision traced" .-> OBS
-    HITL -. "approved" .-> PERM
-    HITL -. "rejected + reason" .-> SUP
-
-    MEM & CRON & VFS --> STORE
-    CRON -. "scheduled wake" .-> SUP
-
-    classDef entry fill:#0b1220,stroke:#38bdf8,stroke-width:2px,color:#e0f2fe
-    classDef brain fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#e0e7ff
-    classDef sub fill:#312e81,stroke:#a5b4fc,color:#eef2ff
-    classDef guard fill:#3b1006,stroke:#fb923c,stroke-width:3px,color:#ffedd5
-    classDef cap fill:#052e16,stroke:#4ade80,color:#dcfce7
-    classDef infra fill:#1c1917,stroke:#a8a29e,color:#f5f5f4
-
-    class U entry
-    class SUP brain
-    class RES,FSA,SCA,ANA sub
-    class IDN,PERM,HITL,DENY guard
-    class MEM,SK,MCP,CRON,VFS cap
-    class STORE,OBS infra
-```
-
-Reading it: every tool call a sub-agent makes passes the policy gate, and sub-agents
-return conclusions to the supervisor rather than their raw transcripts. Nothing reaches a
-capability layer without a decision — `allow`, `ask`, or `deny` — being made and logged.
-
-Every box is a seam, not a hardcode. Swap the model, add an MCP server, register a new
-sub-agent, or tighten a permission without touching the layers around it.
-
-### The path of a single message
-
-The same system zoomed in on one turn — what actually happens between a message arriving
-and a reply going out.
+What actually happens between a message arriving and a reply going out.
 
 ```mermaid
 flowchart LR
@@ -196,8 +133,9 @@ flowchart LR
 Four things this view makes explicit:
 
 **The gate is the only exit from the main agent.** Own tools, delegated sub-agents and
-human approval all sit behind `Permissions + Guardrails`. There is no side channel where
-an action reaches a capability without a policy decision being made first.
+human approval all sit behind `Permissions + Guardrails`. Nothing reaches a capability
+without a decision — `allow`, `ask`, or `deny` — being made and logged, and there is no
+side channel where an action skips it.
 
 **Memory brackets the turn.** Recall runs before the model reasons, and the durable write
 happens after the work completes — once, with the conclusion, rather than continuously
@@ -213,42 +151,10 @@ adding a tool doesn't mean redeploying an agent.
 reminders on purpose: a todo the agent writes for itself and a job it schedules for
 Tuesday 9am are the same primitive with different due dates.
 
+Every box is a seam, not a hardcode. Swap the model, add an MCP server, register a new
+sub-agent, or tighten a permission without touching the layers around it.
+
 The source for this diagram lives in [`_h.mmd`](_h.mmd).
-
-### What a guarded request actually looks like
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor U as User
-    participant S as Supervisor
-    participant R as Research sub-agent
-    participant P as Policy Gate
-    participant M as MCP tools
-    participant DB as Memory store
-
-    U->>S: "Track this competitor and brief me Monday 9am"
-    S->>DB: recall relevant long-term memory
-    DB-->>S: prior context + preferences
-
-    S->>R: delegate — gather current state
-    R->>P: request scrape · read-only
-    P-->>R: allow
-    R->>M: firecrawl.scrape
-    M-->>R: untrusted page content
-    Note over R,P: Research sub-agent holds<br/>no write or send tools —<br/>injected instructions have<br/>nowhere to escalate
-    R-->>S: distilled findings, not raw HTML
-
-    S->>P: request create scheduled job
-    P-->>S: ask — grants future autonomy
-    S->>U: approve this recurring task?
-    U-->>S: approved
-    S->>DB: persist cron job + audit entry
-
-    Note over S,DB: Monday 09:00 — scheduler wakes<br/>the supervisor with no human present
-    DB->>S: resume task
-    S->>U: brief delivered
-```
 
 ---
 
