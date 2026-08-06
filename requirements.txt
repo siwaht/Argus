@@ -11,3 +11,4 @@ elevenlabs
 pyTelegramBotAPI
 langchain-quickjs
 asyncio
+numpy

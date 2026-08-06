@@ -4,6 +4,8 @@ version = "0.1.0"
 description = "The hundred-eyed agent runtime — a multi-agent system with memory, skills, MCP federation, scheduled autonomy and human-in-the-loop guardrails."
 readme = "README.md"
 requires-python = ">=3.13"
+license = { file = "LICENSE" }
+authors = [{ name = "Asif Shah" }]
 dependencies = [
     "asyncio>=4.0.0",
     "deepagents>=0.6.12",
@@ -16,6 +18,7 @@ dependencies = [
     "langchain-text-splitters>=1.1.2",
     "langgraph>=1.2.10",
     "mcp<2",
+    "numpy>=2.5.1",
     "pytelegrambotapi>=4.36.0",
     "python-dotenv>=1.2.2",
 ]
