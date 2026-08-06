@@ -1,3 +1,8 @@
+---
+name: skill-addition
+description: Use when the user asks to add or multiply two numbers. Documents the add and multiply operations, their input format, and expected results.
+---
+
 # Addition and Multiplication Skill
 
 ## Description

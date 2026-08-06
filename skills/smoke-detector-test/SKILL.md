@@ -1,3 +1,8 @@
+---
+name: smoke-detector-test
+description: Use when the user asks to run a smoke detector test. Returns exactly one of two fixed status phrases chosen at random, with no extra explanation.
+---
+
 # Smoke Detector Test Skill
 
 ## Description

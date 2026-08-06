@@ -6,13 +6,14 @@ from dotenv import load_dotenv
 
 from mcp_config import get_mcp_client
 # from langchain.agents import create_agent
-from deepagents import create_deep_agent
+from deepagents import create_deep_agent, CompiledSubAgent
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.store.memory import InMemoryStore
 from langchain.messages import HumanMessage, SystemMessage
 from deepagents.backends import CompositeBackend, StateBackend, StoreBackend, FilesystemBackend
 from langchain_openai import ChatOpenAI
 from langchain.tools import tool
+from test import agentx
 
 
 load_dotenv()
@@ -47,6 +48,20 @@ backend = CompositeBackend(
     }
 )
 
+############################
+# Wrap it as a CompiledSubAgent
+rag_agent = CompiledSubAgent(
+    name="rag-agent",
+    description=(
+        "Use for any question about the short story 'Lunch at the Liberty Diner' "
+        "(its characters, what they ordered, their jobs, nationalities, dialogue, "
+        "or events). Searches the indexed story text and returns the answer with "
+        "supporting passages. This is the only source for that story -- do not "
+        "answer such questions from memory."
+    ),
+    runnable=agentx,
+)
+###############################
 
 async def ask_agent(query: str) -> str:
     client = get_mcp_client()
@@ -60,7 +75,8 @@ async def ask_agent(query: str) -> str:
         skills=['/skills/'],
         backend= backend,
         checkpointer=memory,
-        store=InMemoryStore()
+        store=InMemoryStore(),
+        subagents=[rag_agent]
     )
     result = await agent.ainvoke({
         "messages": HumanMessage(content=query)},config=config)
